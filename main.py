@@ -89,39 +89,34 @@ def clearAroundExit(maze: list[list[int]], x:int, y:int):
     elif y == COLS - 1:
         maze[y-1][x] = 1
 
-def createPath(maze: list[list[int]], startX:int, startY:int, endX:int, endY:int):
-    choice = random.randint(1,4)
-    x = startX
-    y = startY
-    while x != endX and y != endY:
-        if choice == 1:
-            x += 1
-        elif choice == 2:
-            x -= 1
-        elif choice == 3:
-            y += 1
-        else:
-            y -= 1
-        if isValid(x, y):
-            cell = maze[y][x]
-            if cell != 0 and cell != 3:
-                cell = 1
+def findEnd(maze: list[list[int]]):
+    candidates = []
+    for x in range(COLS):
+        if maze[0][x] == 1:
+            candidates.append((x, 0))
+        elif maze[ROWS - 1][x] == 1:
+            candidates.append((x, ROWS - 1))
+
+    for y in range(ROWS):
+        if maze[y][0] == 1:
+            candidates.append((0, y))
+        elif maze[y][COLS - 1] == 1:
+            candidates.append((COLS - 1, y))
+    
+    return random.choice(candidates)
 def mazeGeneration(maze: list):
     res = pickStart()
     x, y = res[0]
     endX, endY = res[1] 
     maze[y][x] = 2
-    maze[endY][endX] = 3
     clearAroundExit(maze, endX, endY)
-    createPath(maze, x, y, endX, endY) 
-    frontiers = getFrontiers(x, y) 
+    frontiers = set(getFrontiers(x, y))
     
     while(len(frontiers) > 0):
-        idx = random.randint(0, len(frontiers) - 1)
-        frontierX, frontierY= frontiers[idx]
+        frontierX, frontierY= random.choice(list(frontiers))
         neighbors = []
         for nx, ny in getFrontiers(frontierX, frontierY):
-            if maze[ny][nx] != 0:
+            if maze[ny][nx] == 1 or maze[ny][nx] == 2:
                 neighbors.append((nx, ny))
 
         if neighbors:
@@ -131,10 +126,13 @@ def mazeGeneration(maze: list):
             maze[frontierY][frontierX] = 1
 
             for fx, fy in getFrontiers(frontierX, frontierY):
-                if maze[fy][fx] == 0 and (fx, fy) not in frontiers:
-                    frontiers.append((fx, fy))
+                if maze[fy][fx] == 0:
+                    frontiers.add((fx, fy))
         
-        frontiers.remove((frontierX, frontierY))
+        frontiers.discard((frontierX, frontierY))
+    
+    endX, endY = findEnd(maze)
+    maze[endY][endX] = 3
 
 pygame.init()
 surface = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -143,6 +141,8 @@ running = True
 
 #0 denotes a wall
 #1 denotes a path
+#2 denotes the start
+#3 denotes the end
 maze = [[0 for i in range(COLS)] for j in range(ROWS)]
 mazeGeneration(maze)
 
