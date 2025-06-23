@@ -79,7 +79,7 @@ def getFrontiers(x, y):
 
     return frontiers
 
-def clearAroundExit(maze: list, x:int, y:int):
+def clearAroundExit(maze: list[list[int]], x:int, y:int):
     if x == 0:
         maze[y][x+1] = 1
     elif x == ROWS - 1:
@@ -89,6 +89,23 @@ def clearAroundExit(maze: list, x:int, y:int):
     elif y == COLS - 1:
         maze[y-1][x] = 1
 
+def createPath(maze: list[list[int]], startX:int, startY:int, endX:int, endY:int):
+    choice = random.randint(1,4)
+    x = startX
+    y = startY
+    while x != endX and y != endY:
+        if choice == 1:
+            x += 1
+        elif choice == 2:
+            x -= 1
+        elif choice == 3:
+            y += 1
+        else:
+            y -= 1
+        if isValid(x, y):
+            cell = maze[y][x]
+            if cell != 0 and cell != 3:
+                cell = 1
 def mazeGeneration(maze: list):
     res = pickStart()
     x, y = res[0]
@@ -96,6 +113,7 @@ def mazeGeneration(maze: list):
     maze[y][x] = 2
     maze[endY][endX] = 3
     clearAroundExit(maze, endX, endY)
+    createPath(maze, x, y, endX, endY) 
     frontiers = getFrontiers(x, y) 
     
     while(len(frontiers) > 0):
@@ -117,13 +135,6 @@ def mazeGeneration(maze: list):
                     frontiers.append((fx, fy))
         
         frontiers.remove((frontierX, frontierY))
-
-    """ 
-    running = True 
-    while running:
-    """        
-
-
 
 pygame.init()
 surface = pygame.display.set_mode((WIDTH, HEIGHT))
