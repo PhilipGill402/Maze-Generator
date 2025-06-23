@@ -10,8 +10,12 @@ def drawBoard(board, surface):
             y = j * SIZE
             if cell == 0:
                 pygame.draw.rect(surface, BLACK, pygame.Rect(x, y, SIZE, SIZE))
-            else:
+            elif cell == 1:
                 pygame.draw.rect(surface, WHITE, pygame.Rect(x, y, SIZE, SIZE))
+            elif cell == 2:
+                pygame.draw.rect(surface, GREEN, pygame.Rect(x, y, SIZE, SIZE))
+            else:
+                pygame.draw.rect(surface, RED, pygame.Rect(x, y, SIZE, SIZE))
 
 def pickStart():
     borders = [0, 1, ROWS - 1, COLS - 1]
@@ -20,17 +24,24 @@ def pickStart():
     if choice == 0:
         x = 0
         y = random.randint(0, COLS - 1)
+        endX = ROWS - 1
+        endY = random.randint(1, COLS - 2)
     elif choice == 1:
         x = random.randint(0, ROWS - 1)
         y = 0
+        endX = random.randint(1, ROWS - 2)
+        endY = COLS - 1
     elif choice == ROWS - 1:
         x = ROWS - 1
         y = random.randint(0, COLS - 1)
+        endX = 0
+        endY = random.randint(1, COLS - 2)
     else:
         x = random.randint(0, ROWS - 1)
-        y = COLS - 1
-    
-    return (x, y)
+        y = COLS - 2
+        endX = random.randint(1, ROWS - 2)
+        endY = 0  
+    return ((x, y), (endX, endY))
 
 def isValid(x, y):
     return x >= 0 and x < COLS and y >= 0 and y < ROWS
@@ -68,9 +79,23 @@ def getFrontiers(x, y):
 
     return frontiers
 
+def clearAroundExit(maze: list, x:int, y:int):
+    if x == 0:
+        maze[y][x+1] = 1
+    elif x == ROWS - 1:
+        maze[y][x-1] = 1
+    elif y == 0:
+        maze[y+1][x] = 1
+    elif y == COLS - 1:
+        maze[y-1][x] = 1
+
 def mazeGeneration(maze: list):
-    x, y = pickStart() 
-    maze[y][x] = 1
+    res = pickStart()
+    x, y = res[0]
+    endX, endY = res[1] 
+    maze[y][x] = 2
+    maze[endY][endX] = 3
+    clearAroundExit(maze, endX, endY)
     frontiers = getFrontiers(x, y) 
     
     while(len(frontiers) > 0):
@@ -78,7 +103,7 @@ def mazeGeneration(maze: list):
         frontierX, frontierY= frontiers[idx]
         neighbors = []
         for nx, ny in getFrontiers(frontierX, frontierY):
-            if maze[ny][nx] == 1:
+            if maze[ny][nx] != 0:
                 neighbors.append((nx, ny))
 
         if neighbors:
@@ -92,10 +117,11 @@ def mazeGeneration(maze: list):
                     frontiers.append((fx, fy))
         
         frontiers.remove((frontierX, frontierY))
-    
+
+    """ 
     running = True 
     while running:
-        
+    """        
 
 
 
