@@ -33,7 +33,7 @@ def pickStart():
     return (x, y)
 
 def isValid(x, y):
-    return x >= 0 and x < COLS and y >= 0 and y <= ROWS
+    return x >= 0 and x < COLS and y >= 0 and y < ROWS
 
 def getNeighbors(x, y):
     neighbors = []
@@ -70,22 +70,32 @@ def getFrontiers(x, y):
 
 def mazeGeneration(maze: list):
     x, y = pickStart() 
-    print(x, y)
-    maze[x][y] = 1
+    maze[y][x] = 1
     frontiers = getFrontiers(x, y) 
     
     while(len(frontiers) > 0):
         idx = random.randint(0, len(frontiers) - 1)
         frontierX, frontierY= frontiers[idx]
-        frontier = maze[frontierX][frontierY]
-        currFrontiers = getFrontiers(frontierX, frontierY)
-        for i in currFrontiers:
-            cell = maze[i[0]][i[1]]
-            if cell == 1:
-                dx = frontierX - i[0]
-                dy = frontierY - i[1]
-                if dx != 0:
-                    pass
+        neighbors = []
+        for nx, ny in getFrontiers(frontierX, frontierY):
+            if maze[ny][nx] == 1:
+                neighbors.append((nx, ny))
+
+        if neighbors:
+            idx = random.randint(0, len(neighbors) - 1)
+            nx, ny = neighbors[idx]
+            maze[(frontierY + ny) // 2][(frontierX + nx) // 2] = 1
+            maze[frontierY][frontierX] = 1
+
+            for fx, fy in getFrontiers(frontierX, frontierY):
+                if maze[fy][fx] == 0 and (fx, fy) not in frontiers:
+                    frontiers.append((fx, fy))
+        
+        frontiers.remove((frontierX, frontierY))
+    
+    running = True 
+    while running:
+        
 
 
 
