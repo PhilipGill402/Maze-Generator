@@ -210,7 +210,7 @@ while running:
         elif ev.type == pygame.MOUSEBUTTONDOWN:
             dfsPositions = dfs(maze, startX, startY)
         elif ev.type == pygame.KEYDOWN:
-            if ev.key == pygame.K_b:
+            if ev.key == pygame.K_d:
                 for x, y in dfsPositions:
                     counter += 1
                     maze[y][x] = 4 
