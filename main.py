@@ -1,5 +1,8 @@
 import pygame
 import random
+import copy
+import time 
+from collections import deque 
 from constants import *
 
 def drawBoard(board, surface):
@@ -14,8 +17,10 @@ def drawBoard(board, surface):
                 pygame.draw.rect(surface, WHITE, pygame.Rect(x, y, SIZE, SIZE))
             elif cell == 2:
                 pygame.draw.rect(surface, GREEN, pygame.Rect(x, y, SIZE, SIZE))
-            else:
+            elif cell == 3:
                 pygame.draw.rect(surface, RED, pygame.Rect(x, y, SIZE, SIZE))
+            elif cell == 4:
+                pygame.draw.rect(surface, YELLOW, pygame.Rect(x, y, SIZE, SIZE))
 
 def pickStart():
     borders = [0, 1, ROWS - 1, COLS - 1]
@@ -82,14 +87,30 @@ def getFrontiers(x, y):
 def clearAroundExit(maze: list[list[int]], x:int, y:int):
     if x == 0:
         maze[y][x+1] = 1
+        if isValid(x+1,y+1):
+            maze[y+1][x+1] = 1
+        if isValid(x+1,y-1):
+            maze[y-1][x+1] = 1
     elif x == ROWS - 1:
         maze[y][x-1] = 1
+        if isValid(x-1,y+1):
+            maze[y+1][x-1] = 1
+        if isValid(x-1,y-1):
+            maze[y-1][x-1] = 1
     elif y == 0:
         maze[y+1][x] = 1
+        if isValid(x+1,y+1):
+            maze[y+1][x+1] = 1
+        if isValid(x-1,y-1):
+            maze[y+1][x-1] = 1
     elif y == COLS - 1:
         maze[y-1][x] = 1
+        if isValid(x+1,y-1):
+            maze[y-1][x+1] = 1
+        if isValid(x-1,y-1):
+            maze[y-1][x-1] = 1
 
-def findEnd(maze: list[list[int]]):
+def findEnd(maze: list[list[int]], startX:int, startY:int):
     candidates = []
     for x in range(COLS):
         if maze[0][x] == 1:
@@ -102,8 +123,36 @@ def findEnd(maze: list[list[int]]):
             candidates.append((0, y))
         elif maze[y][COLS - 1] == 1:
             candidates.append((COLS - 1, y))
-    
+
+    for i in candidates:
+        if i[1] == startY or i[0] == startX:
+            candidates.remove(i)
+
     return random.choice(candidates)
+
+def dfs(maze:list[list[int]], startX:int, startY:int) -> list[tuple[int,int]]:
+    newMaze = copy.deepcopy(maze) 
+    positions = []
+    stack = deque()
+    newMaze[startY][startX] = 4 
+    stack.append((startX, startY))
+    
+    while len(stack) > 0:
+        x, y = stack.pop()
+        if newMaze[y][x] == 3:
+            return positions
+        if (x,y) != (startX, startY):
+            positions.append((x,y))
+        
+        neighbors = getNeighbors(x, y)
+        for i in neighbors:
+            if newMaze[i[1]][i[0]] == 1:
+                newMaze[i[1]][i[0]] = 4
+                stack.append((i[0],i[1]))
+            elif newMaze[i[1]][i[0]] == 3:
+                stack.append((i[0], i[1]))
+    return positions
+
 def mazeGeneration(maze: list):
     res = pickStart()
     x, y = res[0]
@@ -131,8 +180,9 @@ def mazeGeneration(maze: list):
         
         frontiers.discard((frontierX, frontierY))
     
-    endX, endY = findEnd(maze)
+    endX, endY = findEnd(maze, x, y)
     maze[endY][endX] = 3
+    return res[0]
 
 pygame.init()
 surface = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -143,8 +193,11 @@ running = True
 #1 denotes a path
 #2 denotes the start
 #3 denotes the end
+#4 denotes visited
 maze = [[0 for i in range(COLS)] for j in range(ROWS)]
-mazeGeneration(maze)
+startX, startY = mazeGeneration(maze)
+counter = 0
+dfsPositions = []
 
 while running:
     surface.fill(BLACK)
@@ -155,7 +208,15 @@ while running:
         if ev.type == pygame.QUIT:
             running = False
         elif ev.type == pygame.MOUSEBUTTONDOWN:
-            print(pickStart())
+            dfsPositions = dfs(maze, startX, startY)
+        elif ev.type == pygame.KEYDOWN:
+            if ev.key == pygame.K_b:
+                for x, y in dfsPositions:
+                    counter += 1
+                    maze[y][x] = 4 
+                    drawBoard(maze, surface)
+                    pygame.display.update()
+                    time.sleep(0.001)
 
     drawBoard(maze, surface)
     pygame.display.update() 
